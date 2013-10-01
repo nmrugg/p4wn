@@ -70,8 +70,8 @@ function _event_target(e){
     var element = document.createElement("div");
     // Does this browser support pointer-events?
     // This is needed to center properly because centerin would make the mouse click on the same square twice.
-    element.style.cssText = "pointer-events:auto";
-    supports_pointer_events = element.style.pointerEvents === "auto";
+    element.style.cssText = "pointer-events:none";
+    supports_pointer_events = element.style.pointerEvents === "none";
 }());
 
 
