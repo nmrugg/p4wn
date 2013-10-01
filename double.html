@@ -4,17 +4,15 @@
 </head>
 <body>
 
-<!-- Put anything you like here... -->
-
-<div id="board-goes-here"></div>
-
-<!-- ...and here -->
+<div id="board1"></div>
+<div id="board2"></div>
 
 <script src="engine.js"></script>
 <script src="display.js"></script>
 <script>
-var game = p4wnify("board-goes-here");
-game.next_move();
+P4_ENCODE_LUT = "  ♙♟♖♜♘♞♗♝♔♚♕♛";
+p4wnify("board1").next_move();
+p4wnify("board2").next_move();
 </script>
 </body>
 </html>
