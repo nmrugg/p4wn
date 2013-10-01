@@ -53,3 +53,9 @@
 .p4wn-wrapper{
   /*border: 1px solid yellow;*/
 }
+
+.floating{
+  cursor: none;
+  pointer-events: none;
+  
+}

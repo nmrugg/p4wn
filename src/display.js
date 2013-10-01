@@ -48,6 +48,7 @@ var P4WN_PROMOTION_INTS = [P4_QUEEN, P4_ROOK, P4_KNIGHT, P4_BISHOP];
 
 var _p4d_proto = {};
 
+var supports_pointer_events;
 
 /* MSIE 6 compatibility functions */
 function _add_event_listener(el, eventname, fn){
@@ -64,7 +65,17 @@ function _event_target(e){
     return (e.currentTarget) ? e.currentTarget : e.srcElement;
 }
 
-_p4d_proto.square_clicked = function(square){
+(function ()
+{
+    var element = document.createElement("div");
+    // Does this browser support pointer-events?
+    // This is needed to center properly because centerin would make the mouse click on the same square twice.
+    element.style.cssText = "pointer-events:auto";
+    supports_pointer_events = element.style.pointerEvents === "auto";
+}());
+
+
+_p4d_proto.square_clicked = function(square, event){
     var board = this.board_state.board;
     var mover = this.board_state.to_play;
     if (this.players[mover] == 'computer'){
@@ -78,7 +89,7 @@ _p4d_proto.square_clicked = function(square){
     }
     else if (piece && (mover == (piece & 1))){
         //clicked on player's colour, so it becomes start
-        this.start_moving_piece(square);
+        this.start_moving_piece(square, event);
     }
     else if (this.move(this.start, square, P4WN_PROMOTION_INTS[this.pawn_becomes])){
         /*If the move works, drop the piece.*/
@@ -201,24 +212,35 @@ _p4d_proto.refresh = function(){
     }
 };
 
-_p4d_proto.start_moving_piece = function(position){
+_p4d_proto.start_moving_piece = function(position, e){
+    e = e || window.event;
     /*drop the currently held one, if any*/
     this.stop_moving_piece();
     var img = this.elements.pieces[this.orientation ? 119 - position : position];
+    
+    if (img.classList) {
+        img.classList.add("floating");
+    } else {
+        img.className = "floating";
+    }
     this.elements.moving_img = img;
     var old_msie = /MSIE [56]/.test(navigator.userAgent);
     img.style.position = (old_msie) ? 'absolute': 'fixed';
     var yoffset = parseInt(P4WN_SQUARE_HEIGHT / 2);
-    if (window.event){
-        img.style.left = (window.event.clientX + 1) + "px";
-        img.style.top = (window.event.clientY - yoffset) + "px";
-    }
+    var xoffset = parseInt(P4WN_SQUARE_WIDTH / 2);
+    
     this.start = position;
-    document.onmousemove = function(e){
+    function set_position(e){
         e = e || window.event;
-        img.style.left = (e.clientX + 1) + "px";
+        if (supports_pointer_events) {
+            img.style.left = (e.clientX - xoffset) + "px";
+        } else {
+            img.style.left = (e.clientX + 1) + "px";
+        }
         img.style.top = (e.clientY - yoffset) + "px";
     };
+    set_position(e);
+    document.onmousemove = set_position;
 };
 
 _p4d_proto.stop_moving_piece = function(){
@@ -227,6 +249,11 @@ _p4d_proto.stop_moving_piece = function(){
         img.style.position = 'static';
         img.style.left = "auto";
         img.style.top = "auto";
+        if (img.classList) {
+            img.classList.remove("floating");
+        } else {
+            img.className = "";
+        }
     }
     this.start = 0;
     this.elements.moving_img = undefined;
@@ -255,7 +282,7 @@ _p4d_proto.write_board_html = function(){
             _add_event_listener(td, 'click',
                                 function(p4d, n){
                                     return function(e){
-                                        p4d.square_clicked(p4d.orientation ? 119 - n : n);
+                                        p4d.square_clicked(p4d.orientation ? 119 - n : n, e);
                                     };
                                 }(this, i));
             var img = p4d_new_child(td, "img");
